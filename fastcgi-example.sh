@@ -1,41 +1,30 @@
-#!/bin/bash
-BIND=127.0.0.1:9000
-USER=www-data
-EXAMPLE_FCGI_CHILDREN=15
-EXAMPLE_FCGI_MAX_REQUESTS=1000
+  ## ABSOLUTE path to the spawn-fcgi binary
+  SPAWNFCGI="spawn-fcgi" 
 
-PHP_CGI=/home/ubuntu/ngx-fcgi-sample/build/
-PHP_CGI_NAME=`basename $PHP_CGI`
-PHP_CGI_ARGS="- USER=$USER PATH=/usr/bin PHP_FCGI_CHILDREN=$PHP_FCGI_CHILDREN PHP_FCGI_MAX_REQUESTS=$PHP_FCGI_MAX_REQUESTS $PHP_CGI -b $BIND"
-RETVAL=0
+  ## ABSOLUTE path to the Example FCGI binary
+  FCGIPROGRAM="/home/ubuntu/ngx-fcgi-sample/build/fcgi_example" 
 
-start() {
-      echo -n "Starting Example FastCGI: "
-      start-stop-daemon --quiet --start --background --chuid "$USER" --exec /usr/bin/env -- $PHP_CGI_ARGS
-      RETVAL=$?
-      echo "$PHP_CGI_NAME."
-}
-stop() {
-      echo -n "Stopping Example FastCGI: "
-      killall -q -w -u $USER $PHP_CGI
-      RETVAL=$?
-      echo "$PHP_CGI_NAME."
-}
+  ## bind to tcp-port on localhost
+  FCGIPORT="9000" 
 
-case "$1" in
-    start)
-      start
-  ;;
-    stop)
-      stop
-  ;;
-    restart)
-      stop
-      start
-  ;;
-    *)
-      echo "Usage: fastcgi-example {start|stop|restart}"
-      exit 1
-  ;;
-esac
-exit $RETVAL
+  ## bind to unix domain socket
+  # FCGISOCKET="/tmp/fcgi.sock" 
+  ## number of example-fcgi children to spawn
+  EXAMPLE_FCGI_CHILDREN=10
+
+  ## number of request server by a single example-process until
+  ## it will be restarted
+  EXAMPLE_FCGI_MAX_REQUESTS=1000
+
+  ## IP adresses where Example FCGI should access server connections
+  FCGI_WEB_SERVER_ADDRS="127.0.0.1" 
+
+  # allowed environment variables separated by spaces
+  ALLOWED_ENV="PATH USER" 
+
+  ## if this script is run as root switch to the following user
+  USERID=www-example
+  GROUPID=www-example
+
+  exec $SPAWNFCGI -a $FCGI_WEB_SERVER_ADDRS -p $FCGIPORT -f $FCGIPROGRAM -u $USERID -g $GROUPID
+  
